@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday Amer!</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #d7c4a7;
+      background-image: radial-gradient(#c2ad8f 1px, transparent 0);
+      background-size: 24px 24px;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      position: relative;
+      perspective: 1500px;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* CARD CLOSED STATE */
+    .card-closed {
+      width: 420px;
+      max-width: 90vw;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      background: #fff;
+      overflow: hidden;
+    }
+    .card-closed:hover {
+      transform: translateY(-8px) rotate(-1deg);
+      box-shadow: 0 22px 40px rgba(0, 0, 0, 0.3);
+    }
+    .card-closed img {
+      width: 100%;
+      display: block;
+    }
+
+    /* CARD SPREAD STATE */
+    .spread-container {
+      display: none;
+      width: 100%;
+      max-width: 880px;
+      background: #f4eae1;
+      border: 8px solid #8b5e3c;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+    .spread-container.active {
+      display: grid;
+    }
+
+    .page {
+      position: relative;
+      padding: 20px;
+      min-height: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .page-left {
+      border-right: 2px dashed #b89f80;
+      background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0z' fill='%23f9f4ee' fill-opacity='0.4'/%3E%3C/svg%3E");
+    }
+    .page-right {
+      background: #0f1826;
+      color: #fff;
+    }
+
+    /* BACK BUTTON */
+    .btn-back {
+      position: absolute;
+      top: -35px;
+      left: 0;
+      background: #8b5e3c;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .btn-back:hover {
+      background: #6e482d;
+    }
+
+    /* LEFT PAGE: ENVELOPE & LETTER */
+    .envelope-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      margin-top: 20px;
+    }
+    .envelope-bg {
+      width: 100%;
+      display: block;
+    }
+    .letter-preview {
+      position: absolute;
+      top: 15%;
+      left: 10%;
+      width: 80%;
+      cursor: pointer;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 2;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .letter-preview.extracted {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.15);
+      width: 360px;
+      max-width: 85vw;
+      z-index: 100;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .overlay.active { display: block; }
+
+    /* RIGHT PAGE: CAKE & CANDLES */
+    .cake-container {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 10px;
+    }
+    .cake-img {
+      width: 100%;
+      display: block;
+    }
+    .flame {
+      position: absolute;
+      width: 14px;
+      height: 28px;
+      background: radial-gradient(circle, #fff 10%, #ffcf40 40%, #ff4500 80%, transparent 100%);
+      border-radius: 50% 50% 20% 20%;
+      filter: drop-shadow(0 0 6px #ffae00);
+      transition: transform 0.1s linear, opacity 0.3s ease;
+      transform-origin: bottom center;
+    }
+    .flame.off {
+      opacity: 0 !important;
+    }
+
+    /* CANDLE POSITIONS RELATIVE TO CAKE CONTAINER */
+    .f1 { top: 31%; left: 32.5%; }
+    .f2 { top: 33%; left: 39.5%; }
+    .f3 { top: 31%; left: 47%; }
+    .f4 { top: 33%; left: 54%; }
+    .f5 { top: 31%; left: 61%; }
+    .f6 { top: 33%; left: 68%; }
+
+    /* CONTROLS & MIC METER */
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .meter-bar {
+      width: 160px;
+      height: 10px;
+      background: #2a3547;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #4a5d78;
+    }
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: #4ef037;
+      transition: width 0.05s ease;
+    }
+    .btn-action {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-action:hover { background: #2563eb; }
+
+    /* WISH MESSAGE */
+    .wish-banner {
+      display: none;
+      margin-top: 10px;
+      font-size: 1.2rem;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255,215,0,0.6);
+      text-align: center;
+      animation: pop 0.4s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .https-note {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      margin-top: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- CLOSED STATE (COVER) -->
+    <div class="card-closed" id="cardCover">
+      <img src="data:image/png;base64,...COVER_BASE64..." alt="Cover Image (Amer)">
+    </div>
+
+    <!-- OPEN STATE (SPREAD) -->
+    <div class="spread-container" id="cardSpread">
+      <button class="btn-back" id="btnBack">← Close Card</button>
+      
+      <!-- LEFT PAGE: LETTER -->
+      <div class="page page-left">
+        <div class="envelope-wrapper">
+          <img src="data:image/png;base64,...ENVELOPE_BASE64..." class="envelope-bg" alt="Envelope">
+          <img src="data:image/png;base64,...LETTER_BASE64..." class="letter-preview" id="letterImg" alt="Letter">
+        </div>
+      </div>
+
+      <!-- RIGHT PAGE: CANDLES -->
+      <div class="page page-right">
+        <div class="cake-container">
+          <img src="data:image/png;base64,...CAKE_BASE64..." class="cake-img" alt="Cake">
+          <!-- INDIVIDUAL FLAMES -->
+          <div class="flame f1"></div>
+          <div class="flame f2"></div>
+          <div class="flame f3"></div>
+          <div class="flame f4"></div>
+          <div class="flame f5"></div>
+          <div class="flame f6"></div>
+        </div>
+
+        <div class="wish-banner" id="wishBanner">
+          ✨ Make a wish, Amer! ✨
+          <br>
+          <button class="btn-action" id="btnRelight" style="margin-top: 8px;">Relight Candles</button>
+        </div>
+
+        <div class="controls" id="blowControls">
+          <div style="font-size: 0.85rem;">Blow into Mic or Hold Button</div>
+          <div class="meter-bar"><div class="meter-fill" id="meterFill"></div></div>
+          <button class="btn-action" id="btnBlow">Hold to Blow 💨</button>
+          <div class="https-note">*Mic access requires HTTPS host. Use fallback button if testing locally.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <script>
+    // NAVIGATION
+    const cardCover = document.getElementById('cardCover');
+    const cardSpread = document.getElementById('cardSpread');
+    const btnBack = document.getElementById('btnBack');
+
+    cardCover.addEventListener('click', () => {
+      cardCover.style.display = 'none';
+      cardSpread.classList.add('active');
+      initMic();
+    });
+
+    btnBack.addEventListener('click', () => {
+      cardSpread.classList.remove('active');
+      cardCover.style.display = 'block';
+    });
+
+    // LETTER INTERACTION
+    const letterImg = document.getElementById('letterImg');
+    const overlay = document.getElementById('overlay');
+
+    function toggleLetter() {
+      letterImg.classList.toggle('extracted');
+      overlay.classList.toggle('active');
+    }
+    letterImg.addEventListener('click', toggleLetter);
+    overlay.addEventListener('click', toggleLetter);
+
+    // BLOW DETECTION & FLAME LOGIC
+    const flames = document.querySelectorAll('.flame');
+    const meterFill = document.getElementById('meterFill');
+    const blowControls = document.getElementById('blowControls');
+    const wishBanner = document.getElementById('wishBanner');
+    const btnRelight = document.getElementById('btnRelight');
+    const btnBlow = document.getElementById('btnBlow');
+
+    let blowDuration = 0;
+    let isBlownOut = false;
+    let audioContext, analyser, microphone, dataArray;
+
+    function initMic() {
+      if (audioContext || isBlownOut) return;
+      navigator.mediaDevices?.getUserMedia({ audio: true })
+        .then(stream => {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          microphone = audioContext.createMediaStreamSource(stream);
+          analyser.fftSize = 256;
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          microphone.connect(analyser);
+          listenToAudio();
+        })
+        .catch(err => console.log('Mic blocked or not available over HTTP:', err));
+    }
+
+    function processBlowIntensity(volume) {
+      if (isBlownOut) return;
+
+      // Update Meter
+      meterFill.style.width = Math.min(100, volume * 2) + '%';
+
+      if (volume > 35) { // Threshold for blow detection
+        blowDuration += 0.05;
+        
+        // Bend flames sideways
+        flames.forEach(f => {
+          const tilt = (Math.random() * 20 + 15);
+          f.style.transform = `skewX(${tilt}deg) scaleY(0.85)`;
+        });
+
+        if (blowDuration >= 0.5) { // Blown out after ~0.5s continuous blow
+          extinguishCandles();
+        }
+      } else {
+        blowDuration = Math.max(0, blowDuration - 0.02);
+        flames.forEach(f => f.style.transform = 'none');
+      }
+    }
+
+    function listenToAudio() {
+      if (isBlownOut) return;
+      analyser.getByteFrequencyData(dataArray);
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      let average = sum / dataArray.length;
+      processBlowIntensity(average);
+      requestAnimationFrame(listenToAudio);
+    }
+
+    // FALLBACK (BUTTON / SPACEBAR)
+    let holdInterval;
+    function startManualBlow() {
+      if (isBlownOut) return;
+      holdInterval = setInterval(() => {
+        processBlowIntensity(50);
+      }, 50);
+    }
+    function stopManualBlow() {
+      clearInterval(holdInterval);
+      processBlowIntensity(0);
+    }
+
+    btnBlow.addEventListener('mousedown', startManualBlow);
+    btnBlow.addEventListener('mouseup', stopManualBlow);
+    btnBlow.addEventListener('mouseleave', stopManualBlow);
+    btnBlow.addEventListener('touchstart', (e) => { e.preventDefault(); startManualBlow(); });
+    btnBlow.addEventListener('touchend', stopManualBlow);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat) startManualBlow();
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') stopManualBlow();
+    });
+
+    function extinguishCandles() {
+      isBlownOut = true;
+      flames.forEach(f => {
+        f.classList.add('off');
+        f.style.transform = 'none';
+      });
+      meterFill.style.width = '0%';
+      blowControls.style.display = 'none';
+      wishBanner.style.display = 'block';
+    }
+
+    btnRelight.addEventListener('click', () => {
+      isBlownOut = false;
+      blowDuration = 0;
+      flames.forEach(f => f.classList.remove('off'));
+      wishBanner.style.display = 'none';
+      blowControls.style.display = 'flex';
+      if (audioContext) listenToAudio();
+    });
+  </script>
+</body>
+</html>
